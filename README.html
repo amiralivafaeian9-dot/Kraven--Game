@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kraven Game</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            min-height: 100vh;
+            line-height: 1.8;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 0, 68, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 255, 255, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(191, 0, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 255, 0, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 20% 20%, rgba(0, 102, 255, 0.12) 0%, transparent 50%);
+            filter: blur(80px);
+            animation: rgbShift 12s infinite;
+            z-index: -1;
+        }
+
+        @keyframes rgbShift {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(1%, -1%) rotate(3deg); }
+            50% { transform: translate(-1%, 1%) rotate(-3deg); }
+            75% { transform: translate(1%, 1%) rotate(2deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        @keyframes rgbText {
+            0% { color: #ff0044; }
+            20% { color: #ff4400; }
+            40% { color: #00ff88; }
+            60% { color: #00ccff; }
+            80% { color: #8844ff; }
+            100% { color: #ff00aa; }
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0a0a0f; }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ff0044, #00ff88, #00ccff); border-radius: 10px; }
+
+        header {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-container { display: flex; align-items: center; gap: 0.8rem; cursor: pointer; }
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(25px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            animation: rgbText 5s infinite;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+        .logo-text { font-size: 1.3rem; font-weight: bold; animation: rgbText 5s infinite; }
+
+        .hamburger { display: flex; flex-direction: column; gap: 5px; cursor: pointer; padding: 8px; background: none; border: none; }
+        .hamburger span { width: 25px; height: 2px; background: #ffffff; border-radius: 3px; transition: all 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+        .menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(10px);
+            z-index: 98; display: none;
+        }
+        .menu-overlay.active { display: block; }
+
+        .side-menu {
+            position: fixed; top: 0; right: -280px; width: 270px; height: 100vh;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(60px);
+            border-left: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: -15px 0 50px rgba(0, 0, 0, 0.6);
+            z-index: 99; padding: 1.5rem 1rem;
+            transition: right 0.4s; overflow-y: auto;
+        }
+        .side-menu.active { right: 0; }
+
+        .side-menu .menu-header {
+            text-align: center; font-size: 1.2rem; animation: rgbText 5s infinite;
+            margin-bottom: 1rem; padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15); font-weight: bold;
+        }
+
+        .side-menu button {
+            display: block; width: 100%; padding: 0.7rem 0.8rem; margin-bottom: 0.3rem;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px;
+            color: #ffffff; cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.85rem; text-align: right;
+        }
+        .side-menu button:hover {
+            background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.25);
+            transform: translateX(-5px);
+        }
+
+        .section { display: none; padding: 1rem; max-width: 1000px; margin: 0 auto; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .hero { text-align: center; padding: 2rem 1rem; margin-bottom: 1.5rem; border-radius: 20px; }
+        .hero h1 { font-size: 1.5rem; animation: rgbText 5s infinite; min-height: 3rem; }
+        .type-cursor { animation: blink 0.7s infinite; color: #00ccff; }
+        .hero p { color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; }
+
+        .games-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.8rem; }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px;
+            overflow: hidden; cursor: pointer; transition: all 0.3s;
+        }
+        .game-card:hover { transform: translateY(-5px); border-color: rgba(255, 255, 255, 0.15); }
+        .game-card img { width: 100%; height: 100px; object-fit: cover; }
+        .no-img { width: 100%; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+        .game-card-info { padding: 0.8rem; }
+        .game-card-info h3 { font-size: 0.9rem; animation: rgbText 5s infinite; }
+
+        .tag {
+            display: inline-block; background: rgba(255, 255, 255, 0.05);
+            padding: 0.2rem 0.6rem; border-radius: 15px; font-size: 0.7rem;
+            margin-left: 0.3rem; border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        input, textarea, select {
+            width: 100%; padding: 0.7rem 0.8rem; margin-bottom: 0.8rem;
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px; color: #ffffff; font-family: 'Vazirmatn', sans-serif;
+            font-size: 0.85rem; outline: none;
+        }
+        input:focus, textarea:focus, select:focus {
+            border-color: rgba(0, 204, 255, 0.4); box-shadow: 0 0 15px rgba(0, 204, 255, 0.1);
+        }
+        textarea { min-height: 100px; resize: vertical; }
+
+        .btn {
+            padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: bold;
+            cursor: pointer; font-family: 'Vazirmatn', sans-serif;
+            border: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.85rem;
+            margin: 0.2rem; background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px); color: #ffffff;
+        }
+        .btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.2); }
+
+        .empty-state {
+            text-align: center; padding: 2rem; color: rgba(255, 255, 255, 0.5);
+            border-radius: 14px; background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06); font-size: 0.9rem;
+        }
+
+        .faq-item {
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px; padding: 1rem; margin-bottom: 0.8rem;
+        }
+        .faq-item h4 { color: #00ccff; font-size: 0.9rem; margin-bottom: 0.3rem; }
+        .faq-item p { color: rgba(255, 255, 255, 0.65); font-size: 0.8rem; }
+
+        .editor-toolbar {
+            display: flex; gap: 0.2rem; flex-wrap: wrap; padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px 10px 0 0;
+            align-items: center;
+        }
+        .editor-toolbar button, .editor-toolbar select {
+            background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #ffffff; padding: 0.3rem 0.6rem; border-radius: 6px;
+            cursor: pointer; font-family: 'Vazirmatn', sans-serif; font-size: 0.75rem;
+            min-width: 35px; text-align: center;
+        }
+        .editor-toolbar button:hover { background: rgba(0, 204, 255, 0.15); border-color: #00ccff; }
+
+        .editor-area {
+            min-height: 200px; padding: 1rem;
+            background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0 0 10px 10px;
+            overflow-y: auto; color: #ffffff; font-size: 0.9rem; line-height: 2;
+        }
+        .editor-area:focus { outline: none; border-color: rgba(0, 204, 255, 0.4); }
+        .editor-area img { max-width: 100%; border-radius: 8px; margin: 0.5rem 0; }
+        .editor-area a { color: #00ccff; text-decoration: underline; }
+
+        footer {
+            text-align: center; padding: 1.5rem; color: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.06); margin-top: 2rem;
+            font-size: 0.8rem; background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(30px);
+            cursor: pointer;
+        }
+        footer p { animation: rgbText 5s infinite; }
+
+        #saveStatus {
+            position: fixed; bottom: 20px; right: 20px;
+            background: rgba(0, 0, 0, 0.9); color: #00ff88;
+            padding: 0.8rem 1.2rem; border-radius: 12px; font-size: 0.85rem;
+            z-index: 9999; opacity: 0; transition: all 0.3s; pointer-events: none;
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        @media (min-width: 768px) {
+            .section { padding: 2rem; }
+            .hero h1 { font-size: 2rem; }
+            .games-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+            .game-card img { height: 130px; }
+            .logo-text { font-size: 1.8rem; }
+            .side-menu { width: 300px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container" onclick="showPage('home')">
+            <div class="logo-icon">KG</div>
+            <div class="logo-text">Kraven Game</div>
+        </div>
+        <button class="hamburger" id="hamburgerBtn" onclick="toggleMenu()">
+            <span></span><span></span><span></span>
+        </button>
+    </header>
+
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">🎮 Kraven Game</div>
+        <button onclick="goToPage('home')">🏠 خانه</button>
+        <button onclick="goToPage('topGames')">🏆 بازی‌های برتر</button>
+        <button onclick="goToPage('newGames')">✨ بازی‌های جدید</button>
+        <button onclick="goToPage('hotGames')">🔥 بازی‌های محبوب</button>
+        <button onclick="goToPage('news')">📰 اخبار</button>
+        <button onclick="goToPage('profile')">👤 پروفایل</button>
+        <button onclick="goToPage('favorites')">⭐ علاقه‌مندی‌ها</button>
+        <button onclick="goToPage('about')">📖 درباره ما</button>
+        <button onclick="goToPage('contact')">📞 تماس با ما</button>
+        <button onclick="goToPage('faq')">❓ سوالات متداول</button>
+        <button onclick="goToPage('rules')">📜 قوانین</button>
+        <div style="text-align:center; padding:0.8rem; margin-top:0.8rem; border-top:1px solid rgba(255,255,255,0.1); font-size:0.7rem; color:rgba(255,255,255,0.6);">
+            Made with ❤️ by Amirali<br>Copyright ©️ 2026 Kraven Game
+        </div>
+    </div>
+
+    <div id="saveStatus"></div>
+
+    <div id="homePage" class="section active">
+        <div class="hero card">
+            <h1 id="typingText"></h1>
+            <p>بهترین بازی‌ها را کشف کنید، تجربه کنید و لذت ببرید.</p>
+        </div>
+        <div class="card">
+            <h3 style="animation:rgbText 5s infinite; margin-bottom:0.5rem;">📊 آمار سایت</h3>
+            <div id="statsRow"></div>
+        </div>
+        <div class="card">
+            <input type="text" id="searchInput" placeholder="🔍 جستجوی بازی..." oninput="filterGames()">
+        </div>
+        <h3 style="margin-bottom:0.8rem; animation:rgbText 5s infinite;">🎮 بازی‌ها</h3>
+        <div class="games-grid" id="gamesList"></div>
+        <div class="card" style="margin-top:1.5rem;">
+            <h3 style="animation:rgbText 5s infinite; margin-bottom:0.5rem;">📰 آخرین اخبار</h3>
+            <div id="newsList"></div>
+        </div>
+    </div>
+
+    <div id="topGamesPage" class="section">
+        <div class="hero card"><h1>🏆 بازی‌های برتر</h1><p>بازی‌هایی با امتیاز ۸ به بالا</p></div>
+        <div class="games-grid" id="topGamesList"></div>
+    </div>
+    <div id="newGamesPage" class="section">
+        <div class="hero card"><h1>✨ بازی‌های جدید</h1><p>جدیدترین بازی‌های اضافه شده</p></div>
+        <div class="games-grid" id="newGamesList"></div>
+    </div>
+    <div id="hotGamesPage" class="section">
+        <div class="hero card"><h1>🔥 بازی‌های محبوب</h1><p>بازی‌هایی با بیشترین لایک</p></div>
+        <div class="games-grid" id="hotGamesList"></div>
+    </div>
+    <div id="newsPage" class="section">
+        <div class="hero card"><h1>📰 اخبار</h1><p>آخرین اخبار دنیای بازی</p></div>
+        <div id="allNewsList"></div>
+    </div>
+    <div id="profilePage" class="section">
+        <div class="card"><h2 style="animation:rgbText 5s infinite;">👤 پروفایل</h2><p style="color:rgba(255,255,255,0.6);">لایک‌ها: <span id="profileLikes">0</span></p></div>
+    </div>
+    <div id="favoritesPage" class="section">
+        <div class="hero card"><h1>⭐ علاقه‌مندی‌ها</h1></div>
+        <div class="games-grid" id="favoritesList"></div>
+    </div>
+    <div id="aboutPage" class="section">
+        <div class="card">
+            <h2 style="animation:rgbText 5s infinite; margin-bottom:1.5rem;">📖 درباره ما</h2>
+            <p style="color:rgba(255,255,255,0.75); margin-bottom:1rem; line-height:2;">به <strong style="color:#00ccff;">Kraven Game</strong> خوش آمدید!</p>
+            <p style="color:rgba(255,255,255,0.75); line-height:2;">ما یک پلتفرم تخصصی برای معرفی و دانلود بازی‌های ویدیویی هستیم.</p>
+        </div>
+    </div>
+    <div id="contactPage" class="section">
+        <div class="card">
+            <h2 style="animation:rgbText 5s infinite; margin-bottom:1rem;">📞 تماس با ما</h2>
+            <p style="color:rgba(255,255,255,0.75);">📧 <a href="mailto:Amiralivafaeian9@gmail.com" style="color:#00ccff;">Amiralivafaeian9@gmail.com</a></p>
+        </div>
+    </div>
+    <div id="faqPage" class="section">
+        <div class="card">
+            <h2 style="animation:rgbText 5s infinite; margin-bottom:1.5rem;">❓ سوالات متداول</h2>
+            <div class="faq-item"><h4>🎮 چطور بازی دانلود کنم؟</h4><p>وارد صفحه بازی شوید و روی دکمه دانلود کلیک کنید.</p></div>
+            <div class="faq-item"><h4>💬 چطور نظر بدم؟</h4><p>پایین صفحه هر بازی فرم نظر هست.</p></div>
+            <div class="faq-item"><h4>🔍 چطور بازی پیدا کنم؟</h4><p>از جستجو استفاده کنید.</p></div>
+            <div class="faq-item"><h4>🆓 سایت رایگانه؟</h4><p>بله! کاملاً رایگان.</p></div>
+            <div class="faq-item"><h4>📱 روی موبایل کار می‌کنه؟</h4><p>بله! ریسپانسیو.</p></div>
+        </div>
+    </div>
+    <div id="rulesPage" class="section">
+        <div class="card">
+            <h2 style="animation:rgbText 5s infinite; margin-bottom:1.5rem;">📜 قوانین</h2>
+            <div class="faq-item"><h4>۱. احترام 🤝</h4><p>به دیگران احترام بگذارید.</p></div>
+            <div class="faq-item"><h4>۲. نظرات 💬</h4><p>نظرات مناسب بنویسید.</p></div>
+            <div class="faq-item"><h4>۳. کپی 🚫</h4><p>کپی مطالب ممنوع.</p></div>
+            <div class="faq-item"><h4>۴. استفاده ✅</h4><p>رایگان برای همه.</p></div>
+            <div class="faq-item"><h4>۵. امنیت 🔐</h4><p>رمز خود را محافظت کنید.</p></div>
+        </div>
+    </div>
+
+    <div id="gamePage" class="section">
+        <button class="btn" onclick="showPage('home')">← بازگشت</button>
+        <div id="gamePageContent"></div>
+    </div>
+
+    <div id="loginPage" class="section">
+        <div class="card" style="max-width:350px; margin:3rem auto; text-align:center;">
+            <h2 style="animation:rgbText 5s infinite;">ورود</h2>
+            <input type="password" id="passwordInput" placeholder="رمز عبور">
+            <button class="btn" onclick="doLogin()">ورود</button>
+        </div>
+    </div>
+
+    <div id="adminPage" class="section">
+        <div class="card">
+            <h2 style="animation:rgbText 5s infinite; margin-bottom:1rem;">مدیریت سایت</h2>
+            <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                <button class="btn" onclick="showAddForm()">+ بازی</button>
+                <button class="btn" onclick="showCommentsManagement()">💬 کامنت</button>
+                <button class="btn" onclick="showNewsManagement()">📰 اخبار</button>
+                <button class="btn" onclick="selectFolder()">📁 ذخیره</button>
+                <button class="btn" onclick="loadFromFile()">📂 باز کردن</button>
+                <button class="btn" onclick="logout()">🚪 خروج</button>
+            </div>
+        </div>
+
+        <div class="card" id="gameForm" style="display:none;">
+            <h3 style="animation:rgbText 5s infinite;">افزودن بازی</h3>
+            <input type="text" id="titleInput" placeholder="عنوان *">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                <input type="text" id="genreInput" placeholder="ژانر">
+                <input type="number" id="ratingInput" placeholder="امتیاز">
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                <input type="number" id="yearInput" placeholder="سال">
+                <input type="text" id="developerInput" placeholder="سازنده">
+            </div>
+            <input type="file" id="imageFileInput" accept="image/*" onchange="previewImage(event)">
+            <img id="imagePreview" style="max-width:150px; display:none; border-radius:10px;">
+            <input type="hidden" id="imageDataInput">
+            <textarea id="shortDescInput" placeholder="توضیح کوتاه"></textarea>
+            
+            <label style="font-size:0.85rem; color:#00ccff;">📝 متن کامل بازی (ادیتور حرفه‌ای)</label>
+            <div class="editor-toolbar">
+                <button onclick="execCmd('bold')"><b>B</b></button>
+                <button onclick="execCmd('italic')"><i>I</i></button>
+                <button onclick="execCmd('underline')"><u>U</u></button>
+                <button onclick="execCmd('strikeThrough')"><s>S</s></button>
+                <button onclick="execCmd('insertUnorderedList')">•</button>
+                <button onclick="execCmd('insertOrderedList')">۱.</button>
+                <button onclick="execCmd('justifyRight')">➡️</button>
+                <button onclick="execCmd('justifyCenter')">⬅️➡️</button>
+                <button onclick="execCmd('justifyLeft')">⬅️</button>
+                <button onclick="changeColor()">🎨</button>
+                <button onclick="changeBgColor()">🖍️</button>
+                <button onclick="createLink()">🔗</button>
+                <button onclick="removeLink()">❌</button>
+                <button onclick="insertImageInEditor()">🖼️</button>
+                <select onchange="changeFontSize(this.value)">
+                    <option value="2">کوچک</option>
+                    <option value="3">معمولی</option>
+                    <option value="4">بزرگ</option>
+                    <option value="5">خیلی بزرگ</option>
+                    <option value="6">غول</option>
+                </select>
+                <select onchange="changeHeading(this.value)">
+                    <option value="p">متن معمولی</option>
+                    <option value="h1">تیتر ۱</option>
+                    <option value="h2">تیتر ۲</option>
+                    <option value="h3">تیتر ۳</option>
+                </select>
+                <button onclick="clearEditor()">🗑️</button>
+            </div>
+            <div class="editor-area" id="editorArea" contenteditable="true" oninput="updateEditorContent()"></div>
+            <input type="hidden" id="editorContentInput">
+            
+            <textarea id="installGuideInput" placeholder="راهنمای نصب"></textarea>
+            <textarea id="minRequirementsInput" placeholder="حداقل سیستم"></textarea>
+            <textarea id="recRequirementsInput" placeholder="سیستم پیشنهادی"></textarea>
+            <div id="downloadLinksContainer"></div>
+            <button class="btn" onclick="addDownloadLink()">+ لینک</button>
+            <br>
+            <button class="btn" onclick="saveGame()">💾 ذخیره</button>
+            <button class="btn" onclick="hideForm()">لغو</button>
+            <input type="hidden" id="editingId">
+        </div>
+
+        <div class="card" id="commentsManagement" style="display:none;">
+            <h3>کامنت‌ها</h3>
+            <div id="adminCommentsList"></div>
+        </div>
+
+        <div class="card" id="newsManagement" style="display:none;">
+            <h3>📰 افزودن خبر</h3>
+            <input type="text" id="newsTitleInput" placeholder="عنوان خبر">
+            <input type="file" id="newsImageInput" accept="image/*" onchange="previewNewsImage(event)">
+            <img id="newsImagePreview" style="max-width:150px; display:none; border-radius:10px;">
+            <input type="hidden" id="newsImageData">
+            
+            <label style="font-size:0.85rem; color:#00ccff;">📝 متن خبر (ادیتور حرفه‌ای)</label>
+            <div class="editor-toolbar">
+                <button onclick="execCmdNews('bold')"><b>B</b></button>
+                <button onclick="execCmdNews('italic')"><i>I</i></button>
+                <button onclick="execCmdNews('underline')"><u>U</u></button>
+                <button onclick="execCmdNews('strikeThrough')"><s>S</s></button>
+                <button onclick="execCmdNews('insertUnorderedList')">•</button>
+                <button onclick="execCmdNews('insertOrderedList')">۱.</button>
+                <button onclick="execCmdNews('justifyRight')">➡️</button>
+                <button onclick="execCmdNews('justifyCenter')">⬅️➡️</button>
+                <button onclick="changeColorNews()">🎨</button>
+                <button onclick="changeBgColorNews()">🖍️</button>
+                <button onclick="createLinkNews()">🔗</button>
+                <button onclick="removeLinkNews()">❌</button>
+                <button onclick="insertNewsImageInEditor()">🖼️</button>
+                <select onchange="changeFontSizeNews(this.value)">
+                    <option value="2">کوچک</option>
+                    <option value="3">معمولی</option>
+                    <option value="4">بزرگ</option>
+                    <option value="5">خیلی بزرگ</option>
+                    <option value="6">غول</option>
+                </select>
+                <select onchange="changeHeadingNews(this.value)">
+                    <option value="p">متن معمولی</option>
+                    <option value="h1">تیتر ۱</option>
+                    <option value="h2">تیتر ۲</option>
+                    <option value="h3">تیتر ۳</option>
+                </select>
+                <button onclick="clearNewsEditor()">🗑️</button>
+            </div>
+            <div class="editor-area" id="newsEditorArea" contenteditable="true" oninput="updateNewsEditorContent()"></div>
+            <input type="hidden" id="newsEditorContent">
+            
+            <button class="btn" onclick="saveNews()">+ افزودن خبر</button>
+            <div id="adminNewsList"></div>
+        </div>
+
+        <h3 style="margin:1rem 0; animation:rgbText 5s infinite;">لیست بازی‌ها</h3>
+        <div class="games-grid" id="adminGamesList"></div>
+    </div>
+
+    <footer id="siteFooter">
+        <p>Made with ❤️ by Amirali</p>
+        <p>Copyright ©️ 2026 Kraven Game</p>
+    </footer>
+
+    <script>
+        var ADMIN_PASSWORD = "Amirali1394";
+        var DB_NAME = "kraven_db";
+        var STORE_GAMES = "games";
+        var STORE_COMMENTS = "comments";
+        var STORE_NEWS = "news";
+        var db = null;
+        var currentGameId = null;
+        var folderHandle = null;
+        var autoSaveEnabled = false;
+
+        var typingText = "قلمرو بازی‌ها؛ جایی که افسانه‌ها شروع می‌شن";
+        var typingIndex = 0;
+
+        function typeWriter() {
+            if (typingIndex < typingText.length) {
+                document.getElementById('typingText').innerHTML = typingText.substring(0, typingIndex + 1) + '<span class="type-cursor">|</span>';
+                typingIndex++;
+                setTimeout(typeWriter, 60);
+            } else {
+                document.getElementById('typingText').innerHTML = typingText;
+            }
+        }
+
+        window.addEventListener('load', function() { setTimeout(typeWriter, 500); });
+
+        // ====== ورود مخفی با ۳ کلیک روی فوتر ======
+        var footerClickCount = 0;
+        var footerClickTimer = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var footer = document.getElementById('siteFooter');
+            footer.addEventListener('click', function() {
+                footerClickCount++;
+                clearTimeout(footerClickTimer);
+                footerClickTimer = setTimeout(function() { footerClickCount = 0; }, 2000);
+                
+                if (footerClickCount >= 3) {
+                    footerClickCount = 0;
+                    showAdminOrLogin();
+                }
+            });
+        });
+
+        function showSaveStatus(message, color) {
+            var status = document.getElementById('saveStatus');
+            status.textContent = message;
+            status.style.color = color || '#00ff88';
+            status.style.opacity = '1';
+            setTimeout(function() { status.style.opacity = '0'; }, 3000);
+        }
+
+        function openDB() {
+            return new Promise(function(resolve) {
+                var request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = function(e) {
+                    var database = e.target.result;
+                    if (!database.objectStoreNames.contains(STORE_GAMES)) database.createObjectStore(STORE_GAMES, { keyPath: 'id' });
+                    if (!database.objectStoreNames.contains(STORE_COMMENTS)) database.createObjectStore(STORE_COMMENTS, { keyPath: 'id' });
+                    if (!database.objectStoreNames.contains(STORE_NEWS)) database.createObjectStore(STORE_NEWS, { keyPath: 'id' });
+                };
+                request.onsuccess = function(e) { db = e.target.result; resolve(); };
+                request.onerror = function() { resolve(); };
+            });
+        }
+
+        function getAllFromStore(storeName) {
+            return new Promise(function(resolve) {
+                if (!db) { resolve([]); return; }
+                var transaction = db.transaction([storeName], 'readonly');
+                var store = transaction.objectStore(storeName);
+                var request = store.getAll();
+                request.onsuccess = function(e) { resolve(e.target.result || []); };
+                request.onerror = function() { resolve([]); };
+            });
+        }
+
+        function saveToStore(storeName, data) {
+            return new Promise(function(resolve) {
+                if (!db) { resolve(); return; }
+                var transaction = db.transaction([storeName], 'readwrite');
+                var store = transaction.objectStore(storeName);
+                store.put(data);
+                transaction.oncomplete = function() { resolve(); };
+                transaction.onerror = function() { resolve(); };
+            });
+        }
+
+        function deleteFromStore(storeName, id) {
+            return new Promise(function(resolve) {
+                if (!db) { resolve(); return; }
+                var transaction = db.transaction([storeName], 'readwrite');
+                var store = transaction.objectStore(storeName);
+                store.delete(id);
+                transaction.oncomplete = function() { resolve(); };
+                transaction.onerror = function() { resolve(); };
+            });
+        }
+
+        // ====== ادیتور بازی ======
+        function execCmd(command) { document.getElementById('editorArea').focus(); document.execCommand(command, false, null); updateEditorContent(); }
+        function changeColor() { var c = prompt('رنگ:', '#00ccff'); if (c) { document.execCommand('foreColor', false, c); updateEditorContent(); } }
+        function changeBgColor() { var c = prompt('رنگ پس‌زمینه:', '#333'); if (c) { document.execCommand('hiliteColor', false, c); updateEditorContent(); } }
+        function createLink() { var s = window.getSelection().toString(); if (!s) { alert('متن رو انتخاب کن!'); return; } var u = prompt('آدرس:', 'https://'); if (u && u !== 'https://') { document.execCommand('createLink', false, u); updateEditorContent(); } }
+        function removeLink() { document.execCommand('unlink', false, null); updateEditorContent(); }
+        function insertImageInEditor() { var i = document.getElementById('imageDataInput').value; if (i) { document.execCommand('insertImage', false, i); updateEditorContent(); } else alert('اول عکس آپلود کن!'); }
+        function changeFontSize(s) { document.getElementById('editorArea').focus(); document.execCommand('fontSize', false, s); updateEditorContent(); }
+        function changeHeading(t) { document.getElementById('editorArea').focus(); document.execCommand('formatBlock', false, t); updateEditorContent(); }
+        function clearEditor() { if (confirm('پاک شود؟')) { document.getElementById('editorArea').innerHTML = ''; updateEditorContent(); } }
+        function updateEditorContent() { document.getElementById('editorContentInput').value = document.getElementById('editorArea').innerHTML; }
+
+        // ====== ادیتور اخبار ======
+        function execCmdNews(command) { document.getElementById('newsEditorArea').focus(); document.execCommand(command, false, null); updateNewsEditorContent(); }
+        function changeColorNews() { var c = prompt('رنگ:', '#00ccff'); if (c) { document.execCommand('foreColor', false, c); updateNewsEditorContent(); } }
+        function changeBgColorNews() { var c = prompt('رنگ پس‌زمینه:', '#333'); if (c) { document.execCommand('hiliteColor', false, c); updateNewsEditorContent(); } }
+        function createLinkNews() { var s = window.getSelection().toString(); if (!s) { alert('متن رو انتخاب کن!'); return; } var u = prompt('آدرس:', 'https://'); if (u && u !== 'https://') { document.execCommand('createLink', false, u); updateNewsEditorContent(); } }
+        function removeLinkNews() { document.execCommand('unlink', false, null); updateNewsEditorContent(); }
+        function insertNewsImageInEditor() { var i = document.getElementById('newsImageData').value; if (i) { document.execCommand('insertImage', false, i); updateNewsEditorContent(); } else alert('اول عکس آپلود کن!'); }
+        function changeFontSizeNews(s) { document.getElementById('newsEditorArea').focus(); document.execCommand('fontSize', false, s); updateNewsEditorContent(); }
+        function changeHeadingNews(t) { document.getElementById('newsEditorArea').focus(); document.execCommand('formatBlock', false, t); updateNewsEditorContent(); }
+        function clearNewsEditor() { if (confirm('پاک شود؟')) { document.getElementById('newsEditorArea').innerHTML = ''; updateNewsEditorContent(); } }
+        function updateNewsEditorContent() { document.getElementById('newsEditorContent').value = document.getElementById('newsEditorArea').innerHTML; }
+
+        // ====== آپلود ======
+        function previewImage(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var maxWidth = 600;
+                    var scale = maxWidth / img.width;
+                    canvas.width = maxWidth;
+                    canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    var compressed = canvas.toDataURL('image/jpeg', 0.6);
+                    document.getElementById('imageDataInput').value = compressed;
+                    document.getElementById('imagePreview').src = compressed;
+                    document.getElementById('imagePreview').style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function previewNewsImage(event) {
+            var file = event.target.files[0];
+            if (!file) return;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var maxWidth = 600;
+                    var scale = maxWidth / img.width;
+                    canvas.width = maxWidth;
+                    canvas.height = img.height * scale;
+                    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                    var compressed = canvas.toDataURL('image/jpeg', 0.6);
+                    document.getElementById('newsImageData').value = compressed;
+                    document.getElementById('newsImagePreview').src = compressed;
+                    document.getElementById('newsImagePreview').style.display = 'block';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ====== ذخیره ======
+        async function selectFolder() {
+            try {
+                folderHandle = await window.showDirectoryPicker();
+                autoSaveEnabled = true;
+                showSaveStatus('✅ پوشه انتخاب شد!');
+                await saveAllData();
+            } catch (error) {}
+        }
+
+        async function saveAllData() {
+            if (!folderHandle) return;
+            try {
+                var games = await getAllFromStore(STORE_GAMES);
+                var comments = await getAllFromStore(STORE_COMMENTS);
+                var news = await getAllFromStore(STORE_NEWS);
+                var fileHandle = await folderHandle.getFileHandle('kraven_data.json', { create: true });
+                var writable = await fileHandle.createWritable();
+                await writable.write(JSON.stringify({ games: games, comments: comments, news: news }, null, 2));
+                await writable.close();
+                showSaveStatus('💾 ذخیره شد!');
+            } catch (error) {}
+        }
+
+        async function loadFromFile() {
+            try {
+                var fileHandles = await window.showOpenFilePicker({ types: [{ description: 'Kraven Data', accept: { 'application/json': ['.json'] } }] });
+                var file = await fileHandles[0].getFile();
+                var text = await file.text();
+                var data = JSON.parse(text);
+                await clearAllStores();
+                if (data.games) { for (var g of data.games) await saveToStore(STORE_GAMES, g); }
+                if (data.comments) { for (var c of data.comments) await saveToStore(STORE_COMMENTS, c); }
+                if (data.news) { for (var n of data.news) await saveToStore(STORE_NEWS, n); }
+                showSaveStatus('✅ فایل بارگذاری شد!');
+                loadHomePage(); loadAdminGames(); loadAdminComments(); loadAdminNews();
+            } catch (error) {}
+        }
+
+        async function clearAllStores() {
+            var stores = [STORE_GAMES, STORE_COMMENTS, STORE_NEWS];
+            for (var storeName of stores) {
+                var items = await getAllFromStore(storeName);
+                for (var item of items) await deleteFromStore(storeName, item.id);
+            }
+        }
+
+        // ====== منو ======
+        function toggleMenu() {
+            document.getElementById('hamburgerBtn').classList.toggle('active');
+            document.getElementById('sideMenu').classList.toggle('active');
+            document.getElementById('menuOverlay').classList.toggle('active');
+        }
+
+        function goToPage(page) {
+            toggleMenu();
+            if (page === 'home') showPage('home');
+            else if (page === 'topGames') showTopGames();
+            else if (page === 'newGames') showNewGames();
+            else if (page === 'hotGames') showHotGames();
+            else if (page === 'news') showNews();
+            else if (page === 'profile') showProfile();
+            else if (page === 'favorites') showFavorites();
+            else if (page === 'about') showInfoPage('aboutPage');
+            else if (page === 'contact') showInfoPage('contactPage');
+            else if (page === 'faq') showInfoPage('faqPage');
+            else if (page === 'rules') showInfoPage('rulesPage');
+        }
+
+        function showInfoPage(id) {
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            document.getElementById(id).classList.add('active');
+        }
+
+        function showPage(page) {
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            if (page === 'home') { document.getElementById('homePage').classList.add('active'); loadHomePage(); }
+            else if (page === 'game') document.getElementById('gamePage').classList.add('active');
+            else if (page === 'login') document.getElementById('loginPage').classList.add('active');
+            else if (page === 'admin') {
+                document.getElementById('adminPage').classList.add('active');
+                loadAdminGames(); loadAdminComments(); loadAdminNews();
+            }
+        }
+
+        function showAdminOrLogin() {
+            if (localStorage.getItem('kraven_logged_in') === 'true') showPage('admin');
+            else showPage('login');
+        }
+
+        function doLogin() {
+            if (document.getElementById('passwordInput').value === ADMIN_PASSWORD) {
+                localStorage.setItem('kraven_logged_in', 'true');
+                showPage('admin');
+            } else alert('رمز اشتباه است!');
+        }
+
+        function logout() { localStorage.removeItem('kraven_logged_in'); showPage('home'); }
+
+        // ====== نمایش ======
+        async function showTopGames() {
+            var games = await getAllFromStore(STORE_GAMES);
+            var top = games.filter(function(g) { return parseFloat(g.rating) >= 8; });
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            document.getElementById('topGamesPage').classList.add('active');
+            displayGames(top, document.getElementById('topGamesList'));
+        }
+        async function showNewGames() {
+            var games = await getAllFromStore(STORE_GAMES);
+            var newGames = games.filter(function(g) { return g.createdAt && (Date.now() - new Date(g.createdAt).getTime()) / 86400000 < 30; });
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            document.getElementById('newGamesPage').classList.add('active');
+            displayGames(newGames, document.getElementById('newGamesList'));
+        }
+        async function showHotGames() {
+            var games = await getAllFromStore(STORE_GAMES);
+            var hot = games.filter(function(g) { return (g.likes || 0) >= 1; });
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            document.getElementById('hotGamesPage').classList.add('active');
+            displayGames(hot, document.getElementById('hotGamesList'));
+        }
+        async function showNews() {
+            var news = await getAllFromStore(STORE_NEWS);
+            var html = news.length === 0 ? '<div class="empty-state">خبری نیست.</div>' : '';
+            for (var n of news) {
+                html += '<div class="card">';
+                if (n.imageData) html += '<img src="' + n.imageData + '" style="width:100%; max-height:200px; object-fit:cover; border-radius:10px;">';
+                html += '<h4 style="color:#00ccff; margin-top:0.5rem;">' + n.title + '</h4>';
+                if (n.text) html += '<div style="color:rgba(255,255,255,0.75); font-size:0.85rem;">' + n.text + '</div>';
+                html += '</div>';
+            }
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            document.getElementById('newsPage').classList.add('active');
+            document.getElementById('allNewsList').innerHTML = html;
+        }
+        async function showProfile() {
+            var likes = localStorage.getItem('kraven_likes');
+            var likedGames = likes ? JSON.parse(likes) : [];
+            document.getElementById('profileLikes').textContent = likedGames.length;
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            document.getElementById('profilePage').classList.add('active');
+        }
+        async function showFavorites() {
+            var likes = localStorage.getItem('kraven_likes');
+            var likedIds = likes ? JSON.parse(likes) : [];
+            var games = await getAllFromStore(STORE_GAMES);
+            var favGames = games.filter(function(g) { return likedIds.indexOf(g.id) !== -1; });
+            document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+            document.getElementById('favoritesPage').classList.add('active');
+            displayGames(favGames, document.getElementById('favoritesList'));
+        }
+
+        async function loadHomePage() {
+            var games = await getAllFromStore(STORE_GAMES);
+            var comments = await getAllFromStore(STORE_COMMENTS);
+            var news = await getAllFromStore(STORE_NEWS);
+            document.getElementById('statsRow').innerHTML = '<span class="tag">🎮 ' + games.length + ' بازی</span><span class="tag">💬 ' + comments.length + ' کامنت</span>';
+            var newsHtml = news.length === 0 ? '<p style="color:rgba(255,255,255,0.5); font-size:0.85rem;">خبری نیست.</p>' : '';
+            for (var n of news.slice(0, 3)) {
+                newsHtml += '<div class="card" style="margin-top:0.5rem;">';
+                if (n.imageData) newsHtml += '<img src="' + n.imageData + '" style="width:100%; max-height:150px; object-fit:cover; border-radius:8px;">';
+                newsHtml += '<h4 style="color:#00ccff;">' + n.title + '</h4>';
+                if (n.text) newsHtml += '<div style="color:rgba(255,255,255,0.6); font-size:0.8rem;">' + n.text + '</div>';
+                newsHtml += '</div>';
+            }
+            document.getElementById('newsList').innerHTML = newsHtml;
+            filterGames();
+        }
+
+        async function filterGames() {
+            var games = await getAllFromStore(STORE_GAMES);
+            var searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            var filtered = games.filter(function(g) { return !searchTerm || (g.title && g.title.toLowerCase().includes(searchTerm)); });
+            displayGames(filtered, document.getElementById('gamesList'));
+        }
+
+        function displayGames(games, container) {
+            if (!container) return;
+            if (games.length === 0) { container.innerHTML = '<div class="empty-state">هیچ بازی‌ای نیست.</div>'; return; }
+            var html = '';
+            for (var game of games) {
+                html += '<div class="game-card" onclick="viewGame(\'' + game.id + '\')">';
+                if (game.imageData) html += '<img src="' + game.imageData + '">';
+                else html += '<div class="no-img">🎮</div>';
+                html += '<div class="game-card-info"><h3>' + game.title + '</h3>';
+                if (game.genre) html += '<span class="tag">' + game.genre + '</span>';
+                if (game.rating) html += '<span class="tag">⭐ ' + game.rating + '</span>';
+                html += '</div></div>';
+            }
+            container.innerHTML = html;
+        }
+
+        async function viewGame(id) {
+            currentGameId = id;
+            var games = await getAllFromStore(STORE_GAMES);
+            var game = games.find(function(g) { return g.id === id; });
+            if (!game) return;
+            var html = '<div class="card">';
+            if (game.imageData) html += '<img src="' + game.imageData + '" style="width:100%; max-height:250px; object-fit:cover; border-radius:12px;">';
+            html += '<h1 style="animation:rgbText 5s infinite;">' + game.title + '</h1>';
+            if (game.genre) html += '<span class="tag">' + game.genre + '</span>';
+            if (game.rating) html += '<span class="tag">⭐ ' + game.rating + '</span>';
+            if (game.shortDesc) html += '<p style="color:rgba(255,255,255,0.6);">' + game.shortDesc + '</p>';
+            if (game.fullContent) html += '<div style="color:rgba(255,255,255,0.8);">' + game.fullContent + '</div>';
+            if (game.installGuide) html += '<div class="card"><h4 style="color:#00ccff;">📖 نصب</h4><p>' + game.installGuide.replace(/\n/g, '<br>') + '</p></div>';
+            if (game.minRequirements) html += '<div class="card"><h4 style="color:#00ccff;">💻 حداقل</h4><p>' + game.minRequirements.replace(/\n/g, '<br>') + '</p></div>';
+            if (game.recRequirements) html += '<div class="card"><h4 style="color:#00ccff;">🚀 پیشنهادی</h4><p>' + game.recRequirements.replace(/\n/g, '<br>') + '</p></div>';
+            if (game.downloadLinks && game.downloadLinks.length > 0) {
+                for (var link of game.downloadLinks) html += '<a href="' + link.url + '" target="_blank" class="btn" style="display:inline-block; text-decoration:none;">📥 ' + link.name + '</a>';
+            }
+            var comments = await getAllFromStore(STORE_COMMENTS);
+            var approved = comments.filter(function(c) { return c.gameId === id && c.status === 'approved'; });
+            html += '<div class="card" style="margin-top:1rem;"><h4 style="color:#00ccff;">💬 نظرات (' + approved.length + ')</h4>';
+            for (var c of approved) html += '<div style="padding:0.5rem;"><strong style="color:#00ccff;">' + c.userName + '</strong><p>' + c.text + '</p></div>';
+            html += '</div>';
+            html += '<div class="card"><input type="text" id="commentName" placeholder="نام"><textarea id="commentText" placeholder="نظر"></textarea><button class="btn" onclick="submitComment()">ارسال</button></div>';
+            html += '</div>';
+            document.getElementById('gamePageContent').innerHTML = html;
+            showPage('game');
+        }
+
+        async function submitComment() {
+            var name = document.getElementById('commentName').value.trim();
+            var text = document.getElementById('commentText').value.trim();
+            if (!name || !text) { alert('نام و نظر!'); return; }
+            await saveToStore(STORE_COMMENTS, { id: 'comment_' + Date.now(), gameId: currentGameId, userName: name, text: text, status: 'pending', createdAt: new Date().toISOString() });
+            if (autoSaveEnabled) await saveAllData();
+            alert('ثبت شد!');
+            viewGame(currentGameId);
+        }
+
+        // ====== مدیریت ======
+        function showAddForm() {
+            document.getElementById('gameForm').style.display = 'block';
+            document.getElementById('commentsManagement').style.display = 'none';
+            document.getElementById('newsManagement').style.display = 'none';
+        }
+        function hideForm() { document.getElementById('gameForm').style.display = 'none'; }
+        function showCommentsManagement() {
+            document.getElementById('commentsManagement').style.display = 'block';
+            document.getElementById('gameForm').style.display = 'none';
+            document.getElementById('newsManagement').style.display = 'none';
+            loadAdminComments();
+        }
+        function showNewsManagement() {
+            document.getElementById('newsManagement').style.display = 'block';
+            document.getElementById('gameForm').style.display = 'none';
+            document.getElementById('commentsManagement').style.display = 'none';
+            loadAdminNews();
+        }
+
+        function addDownloadLink() {
+            var html = '<div style="display:flex; gap:0.3rem;"><input type="text" placeholder="نام" class="dl-name" style="flex:1;"><input type="text" placeholder="آدرس" class="dl-url" style="flex:2;"><button class="btn" onclick="this.parentElement.remove()">🗑️</button></div>';
+            document.getElementById('downloadLinksContainer').innerHTML += html;
+        }
+
+        async function saveGame() {
+            var title = document.getElementById('titleInput').value.trim();
+            if (!title) { alert('عنوان!'); return; }
+            var dlLinks = [];
+            var names = document.querySelectorAll('.dl-name');
+            var urls = document.querySelectorAll('.dl-url');
+            for (var i = 0; i < names.length; i++) {
+                if (names[i].value.trim() && urls[i].value.trim()) dlLinks.push({ name: names[i].value.trim(), url: urls[i].value.trim() });
+            }
+            var editingId = document.getElementById('editingId').value;
+            var gameData = {
+                id: editingId || 'game_' + Date.now(),
+                title: title,
+                genre: document.getElementById('genreInput').value.trim(),
+                rating: document.getElementById('ratingInput').value,
+                year: document.getElementById('yearInput').value,
+                developer: document.getElementById('developerInput').value.trim(),
+                shortDesc: document.getElementById('shortDescInput').value.trim(),
+                imageData: document.getElementById('imageDataInput').value,
+                fullContent: document.getElementById('editorContentInput').value,
+                installGuide: document.getElementById('installGuideInput').value.trim(),
+                minRequirements: document.getElementById('minRequirementsInput').value.trim(),
+                recRequirements: document.getElementById('recRequirementsInput').value.trim(),
+                downloadLinks: dlLinks,
+                likes: 0,
+                createdAt: new Date().toISOString()
+            };
+            await saveToStore(STORE_GAMES, gameData);
+            if (autoSaveEnabled) await saveAllData();
+            alert('ذخیره شد! ✅');
+            hideForm();
+            loadAdminGames();
+        }
+
+        async function editGame(id) {
+            var games = await getAllFromStore(STORE_GAMES);
+            var game = games.find(function(g) { return g.id === id; });
+            if (!game) return;
+            document.getElementById('titleInput').value = game.title || '';
+            document.getElementById('genreInput').value = game.genre || '';
+            document.getElementById('ratingInput').value = game.rating || '';
+            document.getElementById('yearInput').value = game.year || '';
+            document.getElementById('developerInput').value = game.developer || '';
+            document.getElementById('shortDescInput').value = game.shortDesc || '';
+            document.getElementById('imageDataInput').value = game.imageData || '';
+            document.getElementById('editorArea').innerHTML = game.fullContent || '';
+            document.getElementById('editorContentInput').value = game.fullContent || '';
+            document.getElementById('installGuideInput').value = game.installGuide || '';
+            document.getElementById('minRequirementsInput').value = game.minRequirements || '';
+            document.getElementById('recRequirementsInput').value = game.recRequirements || '';
+            document.getElementById('editingId').value = id;
+            if (game.imageData) {
+                document.getElementById('imagePreview').src = game.imageData;
+                document.getElementById('imagePreview').style.display = 'block';
+            }
+            var dlHtml = '';
+            if (game.downloadLinks) {
+                for (var link of game.downloadLinks) {
+                    dlHtml += '<div style="display:flex; gap:0.3rem;"><input type="text" class="dl-name" style="flex:1;" value="' + link.name + '"><input type="text" class="dl-url" style="flex:2;" value="' + link.url + '"><button class="btn" onclick="this.parentElement.remove()">🗑️</button></div>';
+                }
+            }
+            document.getElementById('downloadLinksContainer').innerHTML = dlHtml;
+            showAddForm();
+        }
+
+        async function deleteGame(id) {
+            if (confirm('حذف؟')) {
+                await deleteFromStore(STORE_GAMES, id);
+                if (autoSaveEnabled) await saveAllData();
+                loadAdminGames();
+            }
+        }
+
+        async function loadAdminGames() {
+            var games = await getAllFromStore(STORE_GAMES);
+            var html = '';
+            for (var game of games) {
+                html += '<div class="card" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;"><div><strong>' + game.title + '</strong></div><div><button class="btn" onclick="editGame(\'' + game.id + '\')">✏️</button><button class="btn" onclick="deleteGame(\'' + game.id + '\')">🗑️</button></div></div>';
+            }
+            document.getElementById('adminGamesList').innerHTML = html || '<div class="empty-state">بازی‌ای نیست.</div>';
+        }
+
+        async function loadAdminComments() {
+            var comments = await getAllFromStore(STORE_COMMENTS);
+            var html = '';
+            for (var c of comments) {
+                html += '<div class="card" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;"><div><strong>' + c.userName + '</strong><p>' + c.text + '</p></div><div>';
+                if (c.status !== 'approved') html += '<button class="btn" onclick="approveComment(\'' + c.id + '\')">✅</button>';
+                html += '<button class="btn" onclick="deleteComment(\'' + c.id + '\')">🗑️</button></div></div>';
+            }
+            document.getElementById('adminCommentsList').innerHTML = html || '<div class="empty-state">کامنتی نیست.</div>';
+        }
+
+        async function approveComment(id) {
+            var comments = await getAllFromStore(STORE_COMMENTS);
+            var c = comments.find(function(x) { return x.id === id; });
+            if (c) { c.status = 'approved'; await saveToStore(STORE_COMMENTS, c); if (autoSaveEnabled) await saveAllData(); loadAdminComments(); }
+        }
+
+        async function deleteComment(id) {
+            if (confirm('حذف؟')) { await deleteFromStore(STORE_COMMENTS, id); if (autoSaveEnabled) await saveAllData(); loadAdminComments(); }
+        }
+
+        async function saveNews() {
+            var title = document.getElementById('newsTitleInput').value.trim();
+            var text = document.getElementById('newsEditorContent').value;
+            var imageData = document.getElementById('newsImageData').value;
+            if (!title) { alert('عنوان!'); return; }
+            await saveToStore(STORE_NEWS, { id: 'news_' + Date.now(), title: title, text: text, imageData: imageData, createdAt: new Date().toISOString() });
+            if (autoSaveEnabled) await saveAllData();
+            document.getElementById('newsTitleInput').value = '';
+            document.getElementById('newsEditorArea').innerHTML = '';
+            document.getElementById('newsEditorContent').value = '';
+            document.getElementById('newsImageData').value = '';
+            document.getElementById('newsImagePreview').style.display = 'none';
+            loadAdminNews();
+            alert('خبر اضافه شد! ✅');
+        }
+
+        async function loadAdminNews() {
+            var news = await getAllFromStore(STORE_NEWS);
+            var html = '';
+            for (var n of news) {
+                html += '<div class="card" style="display:flex; justify-content:space-between; flex-wrap:wrap; gap:0.5rem;"><div><strong>' + n.title + '</strong></div><button class="btn" onclick="deleteNews(\'' + n.id + '\')">🗑️</button></div>';
+            }
+            document.getElementById('adminNewsList').innerHTML = html || '<div class="empty-state">خبری نیست.</div>';
+        }
+
+        async function deleteNews(id) {
+            if (confirm('حذف؟')) { await deleteFromStore(STORE_NEWS, id); if (autoSaveEnabled) await saveAllData(); loadAdminNews(); }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await openDB();
+            loadHomePage();
+        });
+    </script>
+</body>
+</html>
